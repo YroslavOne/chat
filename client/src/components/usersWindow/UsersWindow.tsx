@@ -1,43 +1,39 @@
-import { useEffect, useState } from 'react';
-import { UserWindowProps } from './UsersWindow.props';
-import styles from './UsersWindow.module.css'
-import Button from '../button/Button';
-import { io } from 'socket.io-client';
-import Input  from '../input/Input';
-import AddUser from '../addUser/AddUser';
-import { string } from 'prop-types';
+import { useEffect, useState } from "react";
+import { UserWindowProps } from "./UsersWindow.props";
+import styles from "./UsersWindow.module.css";
+import Button from "../button/Button";
+import { io } from "socket.io-client";
+import Input from "../input/Input";
+import AddUser from "../addUser/AddUser";
 
 function UserWindow({ users, setUsersWindowOpen }: UserWindowProps) {
   const [currentUsers, setCurrentUsers] = useState(users);
   const [fiterUser, setFiterUser] = useState(users.users);
   const [windowAddUser, setWindowAddUser] = useState(false);
-	const [search, setSearch] = useState("")
-    const queryParams = new URLSearchParams(window.location.search);
-    const name = queryParams.get("name");
-    const room = queryParams.get("room");
+  const [search, setSearch] = useState("");
+  const queryParams = new URLSearchParams(window.location.search);
+  const name = queryParams.get("name");
+  const room = queryParams.get("room");
 
   useEffect(() => {
-	 update()
-
-   
+    update();
   }, []);
-	function update(){
-	 const socket = io.connect("http://localhost:9999/");
+  function update() {
+    const socket = io.connect("http://localhost:9999/");
 
-		socket.emit('getRoomInfo', room, (data) => {
+    socket.emit("getRoomInfo", room, (data) => {
       if (data.success) {
         setCurrentUsers(data.room);
       }
     });
 
-    socket.on('room', ({ data }) => {
+    socket.on("room", ({ data }) => {
       setCurrentUsers(data);
     });
-		 return () => {
+    return () => {
       socket.disconnect();
     };
-	}
-
+  }
 
   const closeUserWindow = () => {
     setUsersWindowOpen(false);
@@ -45,31 +41,49 @@ function UserWindow({ users, setUsersWindowOpen }: UserWindowProps) {
 
   const deleteUser = (userName: string, userRoom: string) => {
     const socket = io.connect("http://localhost:9999/");
-    socket.emit('removeUserFromRoom', { name: userName, room: userRoom });
-		update()
+    socket.emit("removeUserFromRoom", { name: userName, room: userRoom });
+    update();
   };
-const openWondowAddUser = () =>{
-	setWindowAddUser(true)
-}
-useEffect(() => {
-if(search!==""){
-	const filterCurrentUser = currentUsers.users?.filter((u)=>u.includes(String(search)))
-	setFiterUser(filterCurrentUser)
-} else{
-	setFiterUser(currentUsers?.users)
-	console.log(currentUsers.users)
-}
-},[search, currentUsers])
+  const openWondowAddUser = () => {
+    setWindowAddUser(true);
+  };
+  useEffect(() => {
+    if (search !== "") {
+      const filterCurrentUser = currentUsers.users?.filter((u) =>
+        u.includes(String(search))
+      );
+      setFiterUser(filterCurrentUser);
+    } else {
+      setFiterUser(currentUsers?.users);
+    }
+  }, [search, currentUsers]);
   return (
     currentUsers && (
-      <div className={styles['div']}>
-				{windowAddUser && <AddUser roomUsers={currentUsers.admin} roomName={currentUsers.room} setWindowAddUser={setWindowAddUser}/>}
-        <Button onClick={closeUserWindow} className={styles['button']}>&#215;</Button>
-        {!windowAddUser && <Button onClick={openWondowAddUser} view={'send'} >+ User</Button>}
-<Input placeholder='Searsh user' value={search} className={styles['input']} onChange={(e)=>setSearch(e.target.value)}/>
-        <ul className={styles['ul']}>
+      <div className={styles["div"]}>
+        {windowAddUser && (
+          <AddUser
+            roomUsers={currentUsers.admin}
+            roomName={currentUsers.room}
+            setWindowAddUser={setWindowAddUser}
+          />
+        )}
+        <Button onClick={closeUserWindow} className={styles["button"]}>
+          &#215;
+        </Button>
+        {!windowAddUser && (
+          <Button onClick={openWondowAddUser} view={"send"}>
+            + User
+          </Button>
+        )}
+        <Input
+          placeholder="Searsh user"
+          value={search}
+          className={styles["input"]}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <ul className={styles["ul"]}>
           {fiterUser.map((u, index) => (
-            <li className={styles['li']} key={index}>
+            <li className={styles["li"]} key={index}>
               <div>{u}</div>
               {currentUsers.admin === name && name !== u && (
                 <Button onClick={() => deleteUser(u, room)}>delete</Button>
@@ -77,7 +91,6 @@ if(search!==""){
             </li>
           ))}
         </ul>
-			
       </div>
     )
   );

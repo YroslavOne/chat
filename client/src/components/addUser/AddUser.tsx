@@ -1,49 +1,61 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import Button from '../button/Button';
-import styles from './AddUser.module.css';
+import Button from "../button/Button";
+import styles from "./AddUser.module.css";
+import { AddUserProps } from "./AddUser.props";
+
+interface User {
+  name: string;
+}
 
 const socket = io.connect("http://localhost:9999/");
 
-function AddUser({ roomUsers, roomName, setWindowAddUser}) {
-  const [availableUsers, setAvailableUsers] = useState([]);
+function AddUser({ roomName, setWindowAddUser }: AddUserProps) {
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState([]);
 
   useEffect(() => {
-    socket.emit('getUsersNotInRoom', roomName, (data) => {
+    socket.emit("getUsersNotInRoom", roomName, (data: User[]) => {
       setAvailableUsers(data);
     });
-  }, [selectedUser]);
+  }, [selectedUser, roomName]);
 
-  const handleAddUser = (u) => {
-    if (u) {
-			setSelectedUser(u)
-      socket.emit('addUserToRoom', { userName: u, room: roomName }, (response) => {
-        if (response.success) {
-          setAvailableUsers((prev) => prev.filter((u) => u.name !== u));
-        } else {
-          alert(response.message);
+  const handleAddUser = (userName: string) => {
+    if (userName) {
+      setSelectedUser(userName);
+      socket.emit(
+        "addUserToRoom",
+        { userName, room: roomName },
+        (response: { success: boolean; message?: string }) => {
+          if (response.success) {
+            setAvailableUsers((prev) =>
+              prev.filter((u) => u.name !== userName)
+            );
+          } else {
+            alert(response.message);
+          }
         }
-      });
+      );
     }
-			setSelectedUser("")
-
+    setSelectedUser("");
   };
-const closeWindow = ()=>{
-	setWindowAddUser(false)
-}
+
+  const closeWindow = () => {
+    setWindowAddUser(false);
+  };
+
   return (
-    <div className={styles['div']}>
-      <ul className={styles['ul']}>
-        {availableUsers && availableUsers.map((u, index) => (
-          <li className={styles['li']} key={index}>
-            {u}
-            <Button onClick={() => handleAddUser(u)}>Select</Button>
-          </li>
-        ))}
+    <div className={styles["div"]}>
+      <ul className={styles["ul"]}>
+        {availableUsers &&
+          availableUsers.map((u, index) => (
+            <li className={styles["li"]} key={index}>
+              {u.name}
+              <Button onClick={() => handleAddUser(u.name)}>Select</Button>
+            </li>
+          ))}
       </ul>
-       
-        <Button onClick={closeWindow}>Close</Button>
+      <Button onClick={closeWindow}>Close</Button>
     </div>
   );
 }

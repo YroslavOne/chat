@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
-import styles from './Myaccount.module.css'
+import styles from "./Myaccount.module.css";
 import Button from "../button/Button";
 import Input from "../input/Input";
 
@@ -13,17 +13,16 @@ const Myaccount = () => {
   const [username, setUsername] = useState("");
   const queryParams = new URLSearchParams(window.location.search);
   const name = queryParams.get("name");
-	const navigate = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (name) {
       setUsername(name);
-      console.log(`Joining room for user: ${name}`);
       socket.emit("join", { name, room: "default" });
 
       socket.on("rooms", ({ rooms }) => {
         if (Array.isArray(rooms)) {
-          setRooms(rooms.map(room => room));
+          setRooms(rooms.map((room) => room));
         }
       });
 
@@ -53,40 +52,41 @@ const Myaccount = () => {
     }
   };
 
-const exit = () => {
+  const exit = () => {
     navigate(`/`);
   };
 
   return (
-    <div className={styles['div']}>
-			<div className={styles['top-menu']}>
-      <h2 className={styles['h2']}>Welcome, {username}</h2>
+    <div className={styles["div"]}>
+      <div className={styles["top-menu"]}>
+        <h2 className={styles["h2"]}>Welcome, {username}</h2>
 
-				<Button onClick={exit}>Exit</Button>
-			</div>
-      <h3 className={styles['h3']}>Your Rooms:</h3>
-      <ul className={styles['ul']}>
+        <Button onClick={exit}>Exit</Button>
+      </div>
+      <h3 className={styles["h3"]}>Your Rooms:</h3>
+      <ul className={styles["ul"]}>
         {rooms.map((room, index) => (
-          <li className={styles['li']} key={index}>{room.room}
-          <Link
-            to={`/chat?name=${username}&room=${room.room}`}
-          >
-          <Button view="send">Перейти</Button></Link>
+          <li className={styles["li"]} key={index}>
+            {room.room}
+            <Link to={`/chat?name=${username}&room=${room.room}`}>
+              <Button view="send">Перейти</Button>
+            </Link>
           </li>
-          
         ))}
       </ul>
-			<div className={styles['create-room']}>
-      <Input
-        type="text"
-        value={newRoom}
-        onChange={(e) => setNewRoom(e.target.value)}
-        placeholder="New Room Name"
-      />
-      
-      <Button view="send" onClick={handleCreateRoom}>Create Room</Button>
+      <div className={styles["create-room"]}>
+        <Input
+          type="text"
+          value={newRoom}
+          onChange={(e) => setNewRoom(e.target.value)}
+          placeholder="New Room Name"
+        />
+
+        <Button view="send" onClick={handleCreateRoom}>
+          Create Room
+        </Button>
+      </div>
     </div>
-		</div>
   );
 };
 

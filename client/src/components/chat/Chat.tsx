@@ -33,7 +33,7 @@ interface RoomData {
 
 const socket = io.connect("http://localhost:9999/");
 
-const Chat: React.FC = () => {
+function Chat() {
   const queryParams = new URLSearchParams(window.location.search);
   const name = queryParams.get("name");
   const room = queryParams.get("room");
@@ -52,7 +52,6 @@ const Chat: React.FC = () => {
       socket.emit("getRoomInfo", room, (data) => {
         if (data.success) {
           setRoomInfo(data.room);
-        } else {
         }
       });
     }
@@ -65,19 +64,23 @@ const Chat: React.FC = () => {
   }, [state]);
 
   useEffect(() => {
-    const searchParams: { [key: string]: string } = Object.fromEntries(
+    const searchParams: Params = Object.fromEntries(
       new URLSearchParams(search)
-    );
-    setParams(searchParams as Params);
-    console.log(`Joining chat with params: ${JSON.stringify(searchParams)}`);
-    socket.emit("join", searchParams);
-
-    return () => {
-      socket.emit("leftRoom", searchParams);
-      socket.off("message");
-      socket.off("room");
-    };
+    ) as Params;
+    setParams(searchParams);
   }, [search]);
+
+  useEffect(() => {
+    if (params.room && params.name) {
+      socket.emit("join", params);
+
+      return () => {
+        socket.emit("leftRoom", params);
+        socket.off("message");
+        socket.off("room");
+      };
+    }
+  }, [params]);
 
   useEffect(() => {
     const messageListener = ({ data }: { data: Message }) => {
@@ -115,11 +118,8 @@ const Chat: React.FC = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!message) return;
-
     socket.emit("sendMessage", { message, params });
-
     setMessage("");
   };
 
@@ -179,6 +179,6 @@ const Chat: React.FC = () => {
       </form>
     </div>
   );
-};
+}
 
 export default Chat;
